@@ -140,7 +140,7 @@ NodeManager::NodeManager(boost::asio::io_service &io_service, const NodeID &self
           config.worker_commands, config.raylet_config,
           /*starting_worker_timeout_callback=*/
           [this]() { this->DispatchTasks(this->local_queues_.GetReadyTasksByClass()); }),
-      scheduling_policy_(local_queues_),
+      scheduling_policy_(local_queues_, gcs_client),
       reconstruction_policy_(
           io_service_,
           [this](const TaskID &task_id, const ObjectID &required_object_id) {

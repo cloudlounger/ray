@@ -109,6 +109,12 @@ parser.add_argument(
     help="A list of directories or jar files separated by colon that specify "
     "the search path for user code. This will be used as `CLASSPATH` in "
     "Java and `PYTHONPATH` in Python.")
+parser.add_argument(
+    "--raylet-region-name",
+    default="default",
+    type=str,
+    help="raylet region name"
+)
 if __name__ == "__main__":
     # NOTE(sang): For some reason, if we move the code below
     # to a separate function, tensorflow will capture that method
@@ -161,6 +167,7 @@ if __name__ == "__main__":
         temp_dir=args.temp_dir,
         load_code_from_local=args.load_code_from_local,
         metrics_agent_port=args.metrics_agent_port,
+        raylet_region=args.raylet_region_name
     )
 
     node = ray.node.Node(

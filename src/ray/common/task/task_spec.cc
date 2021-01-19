@@ -197,6 +197,15 @@ std::string TaskSpecification::GetDebuggerBreakpoint() const {
   return message_->debugger_breakpoint();
 }
 
+std::string TaskSpecification::GetRayletRegion() const {
+  return message_->raylet_region();
+}
+
+void TaskSpecification::SetRayletRegion(const std::string &raylet_region){
+  message_->set_raylet_region(raylet_region);
+}
+
+
 std::unordered_map<std::string, std::string>
 TaskSpecification::OverrideEnvironmentVariables() const {
   return MapFromProtobuf(message_->override_environment_variables());

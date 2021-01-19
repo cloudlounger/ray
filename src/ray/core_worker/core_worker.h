@@ -74,6 +74,7 @@ struct CoreWorkerOptions {
         node_manager_port(0),
         raylet_ip_address(""),
         driver_name(""),
+        driver_region("default"),
         stdout_file(""),
         stderr_file(""),
         task_execution_callback(nullptr),
@@ -118,6 +119,8 @@ struct CoreWorkerOptions {
   std::string raylet_ip_address;
   /// The name of the driver.
   std::string driver_name;
+  /// The name of the driver region.
+  std::string driver_region;
   /// The stdout file of this process.
   std::string stdout_file;
   /// The stderr file of this process.

@@ -149,7 +149,8 @@ class RayParams:
                  metrics_agent_port=None,
                  metrics_export_port=None,
                  lru_evict=False,
-                 code_search_path=None):
+                 code_search_path=None,
+                 raylet_region=None):
         self.object_ref_seed = object_ref_seed
         self.redis_address = redis_address
         self.num_cpus = num_cpus
@@ -198,6 +199,7 @@ class RayParams:
         self.code_search_path = code_search_path
         if code_search_path is None:
             self.code_search_path = []
+        self.raylet_region = raylet_region
 
         # Set the internal config options for LRU eviction.
         if lru_evict:

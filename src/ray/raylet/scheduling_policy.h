@@ -20,6 +20,7 @@
 #include "ray/common/bundle_spec.h"
 #include "ray/common/task/scheduling_resources.h"
 #include "ray/raylet/scheduling_queue.h"
+#include "ray/gcs/gcs_client.h"
 
 namespace ray {
 
@@ -34,7 +35,7 @@ class SchedulingPolicy {
   /// \param scheduling_queue: reference to a scheduler queues object for access to
   /// tasks.
   /// \return Void.
-  SchedulingPolicy(const SchedulingQueue &scheduling_queue);
+  SchedulingPolicy(const SchedulingQueue &scheduling_queue, const std::shared_ptr<gcs::GcsClient>  &gcs_client);
 
   /// \brief Perform a scheduling operation, given a set of cluster resources and
   /// producing a mapping of tasks to raylets.
@@ -79,6 +80,13 @@ class SchedulingPolicy {
   std::vector<TaskID> SpillOver(SchedulingResources &remote_resources,
                                 SchedulingResources &local_resources) const;
 
+  /// \brief fetch the node region property from gcs server.
+  ///
+  /// \param node_id Raylet Node ID.
+  /// 
+  /// \return Raylet Region.
+  std::string GetRayletRegionByID(const NodeID &node_id) const;
+
   /// \brief SchedulingPolicy destructor.
   virtual ~SchedulingPolicy();
 
@@ -87,6 +95,8 @@ class SchedulingPolicy {
   const SchedulingQueue &scheduling_queue_;
   /// Internally maintained random number generator.
   std::mt19937_64 gen_;
+  /// Gcs client accesses nodeinfo from gcs server when schedule tasks.
+  std::shared_ptr<gcs::GcsClient> gcs_client_;
 };
 
 }  // namespace raylet

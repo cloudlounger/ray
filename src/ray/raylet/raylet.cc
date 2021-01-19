@@ -59,7 +59,7 @@ Raylet::Raylet(boost::asio::io_service &main_service, const std::string &socket_
                int redis_port, const std::string &redis_password,
                const NodeManagerConfig &node_manager_config,
                const ObjectManagerConfig &object_manager_config,
-               std::shared_ptr<gcs::GcsClient> gcs_client, int metrics_export_port)
+               std::shared_ptr<gcs::GcsClient> gcs_client, int metrics_export_port, const std::string &raylet_region_name)
     : main_service_(main_service),
       self_node_id_(NodeID::FromRandom()),
       gcs_client_(gcs_client),
@@ -100,6 +100,7 @@ Raylet::Raylet(boost::asio::io_service &main_service, const std::string &socket_
   self_node_info_.set_node_manager_port(node_manager_.GetServerPort());
   self_node_info_.set_node_manager_hostname(boost::asio::ip::host_name());
   self_node_info_.set_metrics_export_port(metrics_export_port);
+  self_node_info_.set_raylet_region(raylet_region_name);
 }
 
 Raylet::~Raylet() {}
@@ -125,7 +126,8 @@ ray::Status Raylet::RegisterGcs() {
                    << self_node_info_.node_manager_port() << " object manager at "
                    << self_node_info_.node_manager_address() << ":"
                    << self_node_info_.object_manager_port() << ", hostname "
-                   << self_node_info_.node_manager_hostname();
+                   << self_node_info_.node_manager_hostname()<<", raylet region name"
+                   << self_node_info_.raylet_region();
 
     // Add resource information.
     const NodeManagerConfig &node_manager_config = node_manager_.GetInitialConfig();

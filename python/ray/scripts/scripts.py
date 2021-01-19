@@ -422,6 +422,13 @@ def debug(address):
     help="Specify whether object reconstruction will be used for this cluster."
 )
 @click.option(
+    "--raylet-region",
+    required=False,
+    type=str,
+    default="default",
+    hidden=True,
+    help="the region of the single node or the cluster")
+@click.option(
     "--metrics-export-port",
     type=int,
     hidden=True,
@@ -439,7 +446,7 @@ def start(node_ip_address, address, port, redis_password, redis_shard_ports,
           temp_dir, java_worker_options, load_code_from_local,
           code_search_path, system_config, lru_evict,
           enable_object_reconstruction, metrics_export_port, log_style,
-          log_color, verbose):
+          log_color, verbose, raylet_region):
     """Start Ray processes manually on the local machine."""
     cli_logger.configure(log_style, log_color, verbose)
     if gcs_server_port and not head:
@@ -501,7 +508,8 @@ def start(node_ip_address, address, port, redis_password, redis_shard_ports,
         _system_config=system_config,
         lru_evict=lru_evict,
         enable_object_reconstruction=enable_object_reconstruction,
-        metrics_export_port=metrics_export_port)
+        metrics_export_port=metrics_export_port,
+        raylet_region=raylet_region)
     if head:
         # Use default if port is none, allocate an available port if port is 0
         if port is None:

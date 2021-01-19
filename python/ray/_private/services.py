@@ -1259,7 +1259,8 @@ def start_raylet(redis_address,
                  socket_to_use=None,
                  head_node=False,
                  start_initial_python_workers_for_first_job=False,
-                 code_search_path=None):
+                 code_search_path=None,
+                 raylet_region=None):
     """Start a raylet, which is a combined local scheduler and object manager.
 
     Args:
@@ -1373,7 +1374,8 @@ def start_raylet(redis_address,
         f"--object-store-name={plasma_store_name}",
         f"--raylet-name={raylet_name}", f"--redis-address={redis_address}",
         f"--config-list={config_str}", f"--temp-dir={temp_dir}",
-        f"--metrics-agent-port={metrics_agent_port}"
+        f"--metrics-agent-port={metrics_agent_port}",
+        f"--raylet-region-name={raylet_region}"
     ]
     if code_search_path:
         start_worker_command.append(f"--code-search-path={code_search_path}")
@@ -1411,6 +1413,7 @@ def start_raylet(redis_address,
         f"--raylet-name={raylet_name}",
         f"--temp-dir={temp_dir}",
         f"--log-dir={log_dir}",
+        #f"--raylet-region-name={raylet_region}",
     ]
 
     if redis_password is not None and len(redis_password) != 0:
@@ -1439,6 +1442,7 @@ def start_raylet(redis_address,
         f"--session_dir={session_dir}",
         f"--metrics-agent-port={metrics_agent_port}",
         f"--metrics_export_port={metrics_export_port}",
+        f"--raylet-region-name={raylet_region}",
     ]
     if worker_port_list is not None:
         command.append(f"--worker_port_list={worker_port_list}")

@@ -133,6 +133,10 @@ class TaskSpecification : public MessageWrapper<rpc::TaskSpec> {
 
   std::string GetDebuggerBreakpoint() const;
 
+  std::string GetRayletRegion() const;
+
+  void SetRayletRegion(const std::string &raylet_region);
+
   std::unordered_map<std::string, std::string> OverrideEnvironmentVariables() const;
 
   bool IsDriverTask() const;

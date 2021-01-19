@@ -760,7 +760,7 @@ cdef class CoreWorker:
     def __cinit__(self, worker_type, store_socket, raylet_socket,
                   JobID job_id, GcsClientOptions gcs_options, log_dir,
                   node_ip_address, node_manager_port, raylet_ip_address,
-                  local_mode, driver_name, stdout_file, stderr_file,
+                  local_mode, driver_name, driver_region, stdout_file, stderr_file,
                   serialized_job_config, metrics_agent_port):
         self.is_local_mode = local_mode
 
@@ -791,6 +791,7 @@ cdef class CoreWorker:
         options.node_manager_port = node_manager_port
         options.raylet_ip_address = raylet_ip_address.encode("utf-8")
         options.driver_name = driver_name
+        options.driver_region = driver_region
         options.stdout_file = stdout_file
         options.stderr_file = stderr_file
         options.task_execution_callback = task_execution_handler

@@ -23,6 +23,7 @@
 #include "ray/raylet/raylet.h"
 #include "ray/stats/stats.h"
 
+DEFINE_string(raylet_region_name, "default", "The raylet retion name");
 DEFINE_string(raylet_socket_name, "", "The socket name of raylet.");
 DEFINE_string(store_socket_name, "", "The socket name of object store.");
 DEFINE_int32(object_manager_port, -1, "The port of object manager.");
@@ -67,6 +68,7 @@ int main(int argc, char *argv[]) {
   ray::RayLog::InstallFailureSignalHandler();
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
+  const std::string raylet_region_name = FLAGS_raylet_region_name;
   const std::string raylet_socket_name = FLAGS_raylet_socket_name;
   const std::string store_socket_name = FLAGS_store_socket_name;
   const int object_manager_port = static_cast<int>(FLAGS_object_manager_port);
@@ -266,7 +268,7 @@ int main(int argc, char *argv[]) {
         server.reset(new ray::raylet::Raylet(
             main_service, raylet_socket_name, node_ip_address, redis_address, redis_port,
             redis_password, node_manager_config, object_manager_config, gcs_client,
-            metrics_export_port));
+            metrics_export_port, raylet_region_name));
 
         server->Start();
       }));

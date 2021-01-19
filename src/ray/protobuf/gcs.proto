@@ -269,6 +269,8 @@ message GcsNodeInfo {
   int32 metrics_export_port = 9;
   // Timestamp that the node is dead.
   int64 timestamp = 10;
+  // the region of the nodes belong to
+  string raylet_region=11;
 }
 
 // Represents the demand for a particular resource shape.

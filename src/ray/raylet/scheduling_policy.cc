@@ -24,9 +24,10 @@ namespace ray {
 
 namespace raylet {
 
-SchedulingPolicy::SchedulingPolicy(const SchedulingQueue &scheduling_queue)
+SchedulingPolicy::SchedulingPolicy(const SchedulingQueue &scheduling_queue, const std::shared_ptr<gcs::GcsClient>  &gcs_client)
     : scheduling_queue_(scheduling_queue),
-      gen_(std::chrono::high_resolution_clock::now().time_since_epoch().count()) {}
+      gen_(std::chrono::high_resolution_clock::now().time_since_epoch().count()),
+      gcs_client_(gcs_client) {}
 
 std::unordered_map<TaskID, NodeID> SchedulingPolicy::Schedule(
     std::unordered_map<NodeID, SchedulingResources> &cluster_resources,
@@ -44,6 +45,7 @@ std::unordered_map<TaskID, NodeID> SchedulingPolicy::Schedule(
   }
 #endif
 
+  auto local_raylet_region = GetRayletRegionByID(local_node_id);
   // We expect all placeable tasks to be placed on exit from this policy method.
   RAY_CHECK(scheduling_queue_.GetTasks(TaskState::PLACEABLE).size() <= 1);
   // Iterate over running tasks, get their resource demand and try to schedule.
@@ -52,6 +54,8 @@ std::unordered_map<TaskID, NodeID> SchedulingPolicy::Schedule(
     const auto &spec = t.GetTaskSpecification();
     const auto &resource_demand = spec.GetRequiredPlacementResources();
     const TaskID &task_id = spec.TaskId();
+    const auto &task_node_region = spec.GetRayletRegion();
+    if (task_node_region != local_raylet_region) continue;
 
     // Try to place tasks locally first.
     const auto &local_resources = cluster_resources[local_node_id];
@@ -78,6 +82,10 @@ std::unordered_map<TaskID, NodeID> SchedulingPolicy::Schedule(
     for (const auto &node_resource_pair : cluster_resources) {
       // pair = NodeID, SchedulingResources
       NodeID node_id = node_resource_pair.first;
+      // first check if the node region requirement is satisfied.
+      const auto &pick_node_region = GetRayletRegionByID(node_id);
+      if (pick_node_region != task_node_region) break;
+
       const auto &node_resources = node_resource_pair.second;
       ResourceSet available_node_resources =
           ResourceSet(node_resources.GetAvailableResources());
@@ -144,6 +152,8 @@ std::unordered_map<TaskID, NodeID> SchedulingPolicy::Schedule(
                       << spec.GetRequiredPlacementResources().ToString()
                       << " for placement, but no nodes have the necessary resources. "
                       << "Check the node table to view node resources.";
+        RAY_LOG(INFO) << "(Region Message) The task with ID "<< task_id << "required region"
+                      <<task_node_region << ": local node region" << local_raylet_region <<".";
       }
     }
   }
@@ -246,6 +256,11 @@ std::vector<TaskID> SchedulingPolicy::SpillOver(
   }
 
   return decision;
+}
+
+std::string SchedulingPolicy::GetRayletRegionByID(const NodeID &node_id) const {
+    auto node_info = gcs_client_->Nodes().Get(node_id);
+    return node_info->raylet_region();
 }
 
 SchedulingPolicy::~SchedulingPolicy() {}

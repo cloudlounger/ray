@@ -159,6 +159,10 @@ class Worker:
         assert isinstance(self.current_job_id, ray.JobID)
         return self._session_index, self.current_job_id
 
+    @property
+    def current_connect_node_region(self):
+        return self.node._ray_params.raylet_region
+
     def mark_actor_init_failed(self, error):
         """Called to mark this actor as failed during initialization."""
 
@@ -480,6 +484,7 @@ def init(
         logging_level=logging.INFO,
         logging_format=ray_constants.LOGGER_FORMAT,
         log_to_driver=True,
+        driver_region=None,
         # The following are unstable parameters and their use is discouraged.
         _enable_object_reconstruction=False,
         _redis_max_memory=None,
@@ -690,6 +695,7 @@ def init(
             num_cpus=num_cpus,
             num_gpus=num_gpus,
             resources=resources,
+            raylet_region=driver_region,
             num_redis_shards=None,
             redis_max_clients=None,
             redis_password=_redis_password,
@@ -749,6 +755,7 @@ def init(
             raylet_ip_address=raylet_ip_address,
             redis_address=redis_address,
             redis_password=_redis_password,
+            raylet_region=driver_region,
             object_ref_seed=None,
             temp_dir=_temp_dir,
             load_code_from_local=_load_code_from_local,
@@ -1141,8 +1148,8 @@ def connect(node,
                 job_id=None)
 
     worker.lock = threading.RLock()
-
     driver_name = ""
+    driver_region = node.raylet_region
     log_stdout_file_path = ""
     log_stderr_file_path = ""
     if mode == SCRIPT_MODE:
@@ -1166,9 +1173,8 @@ def connect(node,
         mode, node.plasma_store_socket_name, node.raylet_socket_name, job_id,
         gcs_options, node.get_logs_dir_path(), node.node_ip_address,
         node.node_manager_port, node.raylet_ip_address, (mode == LOCAL_MODE),
-        driver_name, log_stdout_file_path, log_stderr_file_path,
+        driver_name, driver_region, log_stdout_file_path, log_stderr_file_path,
         serialized_job_config, node.metrics_agent_port)
-
     # Create an object for interfacing with the global state.
     # Note, global state should be intialized after `CoreWorker`, because it
     # will use glog, which is intialized in `CoreWorker`.
@@ -1618,6 +1624,7 @@ def make_decorator(num_returns=None,
                    max_retries=None,
                    max_restarts=None,
                    max_task_retries=None,
+                   task_region=None,
                    worker=None):
     def decorator(function_or_class):
         if (inspect.isfunction(function_or_class)

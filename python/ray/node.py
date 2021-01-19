@@ -141,6 +141,7 @@ class Node:
         self._localhost = socket.gethostbyname("localhost")
         self._ray_params = ray_params
         self._redis_address = ray_params.redis_address
+        self._raylet_region = ray_params.raylet_region
         self._config = ray_params._system_config or {}
 
         # Enable Plasma Store as a thread by default.
@@ -328,6 +329,11 @@ class Node:
     def address(self):
         """Get the cluster address."""
         return self._redis_address
+    
+    @property
+    def raylet_region(self):
+        """Get the raylet ragion name."""
+        return self._raylet_region
 
     @property
     def redis_address(self):
@@ -730,7 +736,8 @@ class Node:
             head_node=self.head,
             start_initial_python_workers_for_first_job=self._ray_params.
             start_initial_python_workers_for_first_job,
-            code_search_path=self._ray_params.code_search_path)
+            code_search_path=self._ray_params.code_search_path,
+            raylet_region=self._ray_params.raylet_region)
         assert ray_constants.PROCESS_TYPE_RAYLET not in self.all_processes
         self.all_processes[ray_constants.PROCESS_TYPE_RAYLET] = [process_info]
 
