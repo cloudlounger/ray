@@ -24,6 +24,7 @@ import makeErrorsFeature from "./features/Errors";
 import gpuFeature from "./features/GPU";
 import gramFeature from "./features/GRAM";
 import hostFeature from "./features/Host";
+import regionFeature from "./features/Region"
 import makeLogsFeature from "./features/Logs";
 import objectStoreMemoryFeature from "./features/ObjectStoreMemory";
 import ramFeature from "./features/RAM";
@@ -153,6 +154,7 @@ type DialogState = {
 
 const nodeInfoHeaders: HeaderInfo<nodeInfoColumnId>[] = [
   { id: "host", label: "Host", numeric: true, sortable: true },
+  { id: "region", label: "Region", numeric: true, sortable: true},
   { id: "workers", label: "PID", numeric: true, sortable: false },
   { id: "uptime", label: "Uptime (s)", numeric: true, sortable: true },
   { id: "cpu", label: "CPU", numeric: false, sortable: true },
@@ -182,6 +184,7 @@ const NodeInfo: React.FC<{}> = () => {
   const clusterTotalWorkers = sum(nodes.map((n) => n.workers.length));
   const nodeInfoFeatures: NodeInfoFeature[] = [
     hostFeature,
+    regionFeature,
     workersFeature,
     uptimeFeature,
     cpuFeature,

@@ -126,7 +126,7 @@ ray::Status Raylet::RegisterGcs() {
                    << self_node_info_.node_manager_port() << " object manager at "
                    << self_node_info_.node_manager_address() << ":"
                    << self_node_info_.object_manager_port() << ", hostname "
-                   << self_node_info_.node_manager_hostname()<<", raylet region name"
+                   << self_node_info_.node_manager_hostname()<<", raylet region name: "
                    << self_node_info_.raylet_region();
 
     // Add resource information.

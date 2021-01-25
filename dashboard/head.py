@@ -72,7 +72,6 @@ class DashboardHead:
         while True:
             try:
                 nodes = await self._get_nodes()
-
                 alive_node_ids = []
                 alive_node_infos = []
                 node_id_to_ip = {}

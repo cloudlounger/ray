@@ -1323,7 +1323,7 @@ void CoreWorker::SubmitTask(const RayFunction &function,
                       placement_options, placement_group_capture_child_tasks,
                       debugger_breakpoint, override_environment_variables);
   TaskSpecification task_spec = builder.Build();
-   task_spec.SetRayletRegion(options_.driver_region);
+  task_spec.SetRayletRegion(options_.driver_region);
   if (options_.is_local_mode) {
     ExecuteTaskLocalMode(task_spec);
   } else {
@@ -1400,6 +1400,7 @@ Status CoreWorker::CreateActor(const RayFunction &function,
 
   *return_actor_id = actor_id;
   TaskSpecification task_spec = builder.Build();
+  task_spec.SetRayletRegion(options_.driver_region);
   Status status;
   if (options_.is_local_mode) {
     if (task_spec.IsDetachedActor()) {

@@ -32,6 +32,7 @@ export type NodeInfoFeature = {
 
 export type nodeInfoColumnId =
   | "host"
+  | "region"
   | "workers"
   | "uptime"
   | "cpu"

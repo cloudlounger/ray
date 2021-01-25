@@ -160,6 +160,7 @@ class DataOrganizer:
         node_info["workers"] = DataSource.node_workers.get(node_id, [])
         node_info["logCount"] = node_log_count
         node_info["errorCount"] = node_err_count
+        node_info["region"] = node['rayletRegion']
         await GlobalSignals.node_info_fetched.send(node_info)
 
         return node_info
@@ -180,6 +181,7 @@ class DataOrganizer:
         node_summary["raylet"] = node_stats
         # Merge GcsNodeInfo to node physical stats
         node_summary["raylet"].update(node)
+        node_summary["region"] = node.raylet_region
 
         await GlobalSignals.node_summary_fetched.send(node_summary)
 

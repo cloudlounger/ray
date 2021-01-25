@@ -55,6 +55,9 @@ std::unordered_map<TaskID, NodeID> SchedulingPolicy::Schedule(
     const auto &resource_demand = spec.GetRequiredPlacementResources();
     const TaskID &task_id = spec.TaskId();
     const auto &task_node_region = spec.GetRayletRegion();
+//    RAY_LOG(DEBUG) << "---------------------------------\n"
+//                                    << "task_node_region: " << task_node_region
+//                                    << " local_raylet_region: " << local_raylet_region << "\n";
     if (task_node_region != local_raylet_region) continue;
 
     // Try to place tasks locally first.
