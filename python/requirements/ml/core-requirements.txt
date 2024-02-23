@@ -11,8 +11,8 @@ lightgbm==3.3.5
 git+https://github.com/ray-project/lightgbm_ray.git
 
 # Huggingface
-transformers==4.19.1  # TODO(ml-team): This should be upgraded.
-accelerate==0.20.3
+transformers==4.36.2
+accelerate==0.25.0
 
 # DL libraries
 -r dl-cpu-requirements.txt
