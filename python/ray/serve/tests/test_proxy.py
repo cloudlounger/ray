@@ -10,7 +10,7 @@ import pytest
 import ray
 from ray import serve
 from ray.actor import ActorHandle
-from ray.serve._private.common import DeploymentID, EndpointInfo, EndpointTag
+from ray.serve._private.common import DeploymentID, EndpointInfo, RequestMetadata
 from ray.serve._private.constants import (
     DEFAULT_UVICORN_KEEP_ALIVE_TIMEOUT_S,
     SERVE_NAMESPACE,
@@ -70,7 +70,9 @@ class FakeActorHandle:
 
 class FakeGrpcHandle:
     def __init__(self, streaming: bool, grpc_context: RayServegRPCContext):
-        self.deployment_id = DeploymentID("fak_deployment_name", "fake_app_name")
+        self.deployment_id = DeploymentID(
+            name="fake_deployment_name", app_name="fake_app_name"
+        )
         self.streaming = streaming
         self.grpc_context = grpc_context
 
@@ -90,6 +92,14 @@ class FakeGrpcHandle:
     def options(self, *args, **kwargs):
         return self
 
+    @property
+    def deployment_name(self) -> str:
+        return self.deployment_id.name
+
+    @property
+    def app_name(self) -> str:
+        return self.deployment_id.app_name
+
 
 class FakeProxyRouter(ProxyRouter):
     def __init__(self, *args, **kwargs):
@@ -97,7 +107,7 @@ class FakeProxyRouter(ProxyRouter):
         self.handle = None
         self.app_is_cross_language = None
 
-    def update_routes(self, endpoints: Dict[EndpointTag, EndpointInfo]):
+    def update_routes(self, endpoints: Dict[DeploymentID, EndpointInfo]):
         pass
 
     def get_handle_for_endpoint(self, *args, **kwargs):
@@ -171,7 +181,9 @@ class FakeProxyRequest(ProxyRequest):
 
 class FakeHTTPHandle:
     def __init__(self, messages):
-        self.deployment_id = DeploymentID("fak_deployment_name", "fake_app_name")
+        self.deployment_id = DeploymentID(
+            name="fake_deployment_name", app_name="fake_app_name"
+        )
         self.messages = messages
 
     async def remote(self, *args, **kwargs):
@@ -179,6 +191,14 @@ class FakeHTTPHandle:
 
     def options(self, *args, **kwargs):
         return self
+
+    @property
+    def deployment_name(self) -> str:
+        return self.deployment_id.name
+
+    @property
+    def app_name(self) -> str:
+        return self.deployment_id.app_name
 
 
 class FakeHttpReceive:
@@ -270,7 +290,11 @@ class TestgRPCProxy:
             grpc_proxy.update_draining(True)
         if routes_updated:
             grpc_proxy.update_routes(
-                {DeploymentID(app="app", name="deployment"): EndpointInfo("/route")},
+                {
+                    DeploymentID(name="deployment", app_name="app"): EndpointInfo(
+                        "/route"
+                    )
+                },
             )
 
         status, [response_bytes] = await _consume_proxy_generator(
@@ -455,7 +479,11 @@ class TestHTTPProxy:
             http_proxy.update_draining(True)
         if routes_updated:
             http_proxy.update_routes(
-                {DeploymentID(app="app", name="deployment"): EndpointInfo("/route")},
+                {
+                    DeploymentID(name="deployment", app_name="app"): EndpointInfo(
+                        "/route"
+                    )
+                },
             )
 
         status, messages = await _consume_proxy_generator(
@@ -529,16 +557,22 @@ class TestHTTPProxy:
     async def test_receive_asgi_messages(self):
         """Test HTTPProxy receive_asgi_messages received correct message."""
         http_proxy = self.create_http_proxy()
-        request_id = "fake-request-id"
+        internal_request_id = "fake-internal-request-id"
+        request_metadata = RequestMetadata(
+            request_id="fake-request-id",
+            internal_request_id="fake-internal-request-id",
+            endpoint="fake-endpoint",
+        )
         queue = AsyncMock()
-        http_proxy.asgi_receive_queues[request_id] = queue
+        http_proxy.asgi_receive_queues[internal_request_id] = queue
 
-        await http_proxy.receive_asgi_messages(request_id=request_id)
+        await http_proxy.receive_asgi_messages(request_metadata=request_metadata)
         queue.wait_for_message.assert_called_once()
         queue.get_messages_nowait.assert_called_once()
 
         with pytest.raises(KeyError):
-            await http_proxy.receive_asgi_messages(request_id="non-existent-request-id")
+            request_metadata.internal_request_id = "non-existent-internal-request-id"
+            await http_proxy.receive_asgi_messages(request_metadata=request_metadata)
 
     @pytest.mark.asyncio
     async def test_call(self):

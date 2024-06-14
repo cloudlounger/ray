@@ -96,7 +96,7 @@ def _make_user_callable_wrapper(
         callable if callable is not None else BasicClass,
         init_args,
         init_kwargs,
-        deployment_id=DeploymentID(app="test_app", name="test_name"),
+        deployment_id=DeploymentID(name="test_name"),
     )
 
 
@@ -115,6 +115,7 @@ def _make_request_metadata(
 
     return RequestMetadata(
         request_id="test_request",
+        internal_request_id="test_internal_request",
         endpoint="test_endpoint",
         call_method=call_method if call_method is not None else "__call__",
         _request_protocol=protocol,

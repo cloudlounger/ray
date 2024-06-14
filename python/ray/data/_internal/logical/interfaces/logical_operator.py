@@ -1,6 +1,11 @@
-from typing import List, Optional
+from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
 from .operator import Operator
+
+if TYPE_CHECKING:
+    import pyarrow
+
+    from ray.data._internal.execution.interfaces import RefBundle
 
 
 class LogicalOperator(Operator):
@@ -37,4 +42,41 @@ class LogicalOperator(Operator):
             return self._num_outputs
         elif len(self._input_dependencies) == 1:
             return self._input_dependencies[0].estimated_num_outputs()
+        return None
+
+    # Override the following 3 methods to correct type hints.
+
+    @property
+    def input_dependencies(self) -> List["LogicalOperator"]:
+        return super().input_dependencies  # type: ignore
+
+    @property
+    def output_dependencies(self) -> List["LogicalOperator"]:
+        return super().output_dependencies  # type: ignore
+
+    def post_order_iter(self) -> Iterator["LogicalOperator"]:
+        return super().post_order_iter()  # type: ignore
+
+    def schema(self) -> Optional[Union[type, "pyarrow.lib.Schema"]]:
+        """The schema of operator outputs, or ``None`` if not known.
+
+        This method is used to get the dataset schema without performing actual
+        computation.
+        """
+        return None
+
+    def num_rows(self) -> Optional[int]:
+        """The number of rows outputted by this operator, or ``None`` if not known.
+
+        This method is used to count the number of rows in a dataset without performing
+        actual computation.
+        """
+        return None
+
+    def input_files(self) -> Optional[List[str]]:
+        """The input files of this operator, or ``None`` if not known."""
+        return None
+
+    def output_data(self) -> Optional[List["RefBundle"]]:
+        """The output data of this operator, or ``None`` if not known."""
         return None
