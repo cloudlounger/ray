@@ -1,3 +1,4 @@
+import asyncio
 import itertools
 import math
 import os
@@ -12,6 +13,9 @@ import pyarrow.parquet as pq
 import pytest
 
 import ray
+from ray.data._internal.execution.interfaces.ref_bundle import (
+    _ref_bundles_iterator_to_block_refs_list,
+)
 from ray.data.context import DataContext
 from ray.data.exceptions import UserCodeException
 from ray.data.tests.conftest import *  # noqa
@@ -943,7 +947,9 @@ def test_map_batches_preserves_empty_block_format(ray_start_regular_shared):
         .map_batches(lambda x: x, batch_size=None)
     )
 
-    block_refs = ds.get_internal_block_refs()
+    bundles = ds.iter_internal_ref_bundles()
+    block_refs = _ref_bundles_iterator_to_block_refs_list(bundles)
+
     assert len(block_refs) == 1
     assert type(ray.get(block_refs[0])) == pd.DataFrame
 
@@ -1055,6 +1061,99 @@ def test_nonserializable_map_batches(shutdown_only):
     # Check that the `inspect_serializability` trace was printed
     with pytest.raises(TypeError, match=r".*was found to be non-serializable.*"):
         x.map_batches(lambda _: lock).take(1)
+
+
+def test_map_batches_async_generator(shutdown_only):
+    ray.shutdown()
+    ray.init(num_cpus=10)
+
+    async def sleep_and_yield(i):
+        await asyncio.sleep(i % 5)
+        return {"input": [i], "output": [2**i]}
+
+    class AsyncActor:
+        def __init__(self):
+            pass
+
+        async def __call__(self, batch):
+            tasks = [asyncio.create_task(sleep_and_yield(i)) for i in batch["id"]]
+            for task in tasks:
+                yield await task
+
+    n = 10
+    ds = ray.data.range(n, override_num_blocks=2)
+    ds = ds.map(lambda x: x)
+    ds = ds.map_batches(AsyncActor, batch_size=1, concurrency=1, max_concurrency=2)
+
+    start_t = time.time()
+    output = ds.take_all()
+    runtime = time.time() - start_t
+    assert runtime < sum(range(n)), runtime
+
+    expected_output = [{"input": i, "output": 2**i} for i in range(n)]
+    assert output == expected_output, (output, expected_output)
+
+
+def test_map_batches_async_exception_propagation(shutdown_only):
+    ray.shutdown()
+    ray.init(num_cpus=2)
+
+    class MyUDF:
+        def __init__(self):
+            pass
+
+        async def __call__(self, batch):
+            # This will trigger an assertion error.
+            assert False
+            yield batch
+
+    ds = ray.data.range(20)
+    ds = ds.map_batches(MyUDF, concurrency=2)
+
+    with pytest.raises(ray.exceptions.RayTaskError) as exc_info:
+        ds.materialize()
+
+    assert "AssertionError" in str(exc_info.value)
+    assert "assert False" in str(exc_info.value)
+
+
+def test_map_batches_async_generator_fast_yield(shutdown_only):
+    # Tests the case where the async generator yields immediately,
+    # with a high number of tasks in flight, which results in
+    # the internal queue being almost instantaneously filled.
+    # This test ensures that the internal queue is completely drained in this scenario.
+
+    ray.shutdown()
+    ray.init(num_cpus=4)
+
+    async def task_yield(row):
+        return row
+
+    class AsyncActor:
+        def __init__(self):
+            pass
+
+        async def __call__(self, batch):
+            rows = [{"id": np.array([i])} for i in batch["id"]]
+            tasks = [asyncio.create_task(task_yield(row)) for row in rows]
+            for task in tasks:
+                yield await task
+
+    n = 8
+    ds = ray.data.range(n, override_num_blocks=n)
+    ds = ds.map_batches(
+        AsyncActor,
+        batch_size=n,
+        compute=ray.data.ActorPoolStrategy(size=1, max_tasks_in_flight_per_actor=n),
+        concurrency=1,
+        max_concurrency=n,
+    )
+
+    output = ds.take_all()
+    expected_output = [{"id": i} for i in range(n)]
+    # Because all tasks are submitted almost simultaneously,
+    # the output order may be different compared to the original input.
+    assert len(output) == len(expected_output), (len(output), len(expected_output))
 
 
 if __name__ == "__main__":

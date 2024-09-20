@@ -10,7 +10,7 @@ import numpy as np
 from ray.rllib.algorithms.ppo.ppo import PPOConfig
 from ray.rllib.algorithms.ppo.torch.ppo_torch_rl_module import PPOTorchRLModule
 from ray.rllib.core.models.configs import MLPHeadConfig
-from ray.rllib.core.rl_module.rl_module import SingleAgentRLModuleSpec
+from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 from ray.rllib.examples.envs.classes.random_env import RandomEnv
 from ray.rllib.models.torch.torch_distributions import TorchCategorical
 from ray.rllib.examples._old_api_stack.models.mobilenet_v2_encoder import (
@@ -57,9 +57,7 @@ class MobileNetTorchPPORLModule(PPOTorchRLModule):
 config = (
     PPOConfig()
     .api_stack(enable_rl_module_and_learner=True)
-    .rl_module(
-        rl_module_spec=SingleAgentRLModuleSpec(module_class=MobileNetTorchPPORLModule)
-    )
+    .rl_module(rl_module_spec=RLModuleSpec(module_class=MobileNetTorchPPORLModule))
     .environment(
         RandomEnv,
         env_config={
@@ -77,7 +75,7 @@ config = (
     # The following training settings make it so that a training iteration is very
     # quick. This is just for the sake of this example. PPO will not learn properly
     # with these settings!
-    .training(train_batch_size=32, sgd_minibatch_size=16, num_sgd_iter=1)
+    .training(train_batch_size=32, minibatch_size=16, num_epochs=1)
 )
 
 config.build().train()

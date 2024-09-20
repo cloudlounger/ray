@@ -90,7 +90,7 @@ class MyAlgo(Algorithm):
         # TODO: Use `max_env_steps=200` option of synchronous_parallel_sample instead.
         while num_env_steps < 200:
             ma_batches = synchronous_parallel_sample(
-                worker_set=self.workers, concat=False
+                worker_set=self.env_runner_group, concat=False
             )
             # Loop through ma-batches (which were collected in parallel).
             for ma_batch in ma_batches:
@@ -128,7 +128,7 @@ class MyAlgo(Algorithm):
             - self._counters[LAST_TARGET_UPDATE_TS]
             >= self.get_policy("dqn_policy").config["target_network_update_freq"]
         ):
-            self.workers.local_worker().get_policy("dqn_policy").update_target()
+            self.env_runner.get_policy("dqn_policy").update_target()
             self._counters[NUM_TARGET_UPDATES] += 1
             self._counters[LAST_TARGET_UPDATE_TS] = self._counters[
                 "agent_steps_trained_DQN"
@@ -178,7 +178,7 @@ if __name__ == "__main__":
             None,
             # Provide entire AlgorithmConfig object, not just an override.
             PPOConfig()
-            .training(num_sgd_iter=10, sgd_minibatch_size=128)
+            .training(num_epochs=10, minibatch_size=128)
             .framework("torch" if args.torch or args.mixed_torch_tf else "tf"),
         ),
         "dqn_policy": (

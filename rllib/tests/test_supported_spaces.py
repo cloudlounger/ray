@@ -4,7 +4,7 @@ import unittest
 import ray
 from ray.rllib.algorithms.appo import APPOConfig
 from ray.rllib.algorithms.dqn import DQNConfig
-from ray.rllib.algorithms.impala import ImpalaConfig
+from ray.rllib.algorithms.impala import IMPALAConfig
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.algorithms.sac import SACConfig
 from ray.rllib.utils.test_utils import check_supported_spaces
@@ -26,7 +26,7 @@ class TestSupportedSpacesIMPALA(unittest.TestCase):
         check_supported_spaces(
             "IMPALA",
             (
-                ImpalaConfig()
+                IMPALAConfig()
                 .resources(num_gpus=0)
                 .training(model={"fcnet_hiddens": [10]})
             ),
@@ -74,8 +74,8 @@ class TestSupportedSpacesPPO(unittest.TestCase):
             .env_runners(num_env_runners=2, rollout_fragment_length=50)
             .training(
                 train_batch_size=100,
-                num_sgd_iter=1,
-                sgd_minibatch_size=50,
+                num_epochs=1,
+                minibatch_size=50,
                 model={
                     "fcnet_hiddens": [10],
                 },
@@ -103,8 +103,8 @@ class TestSupportedSpacesPPONoPreprocessorGPU(unittest.TestCase):
             .env_runners(num_env_runners=2, rollout_fragment_length=50)
             .training(
                 train_batch_size=100,
-                num_sgd_iter=1,
-                sgd_minibatch_size=50,
+                num_epochs=1,
+                minibatch_size=50,
                 model={
                     "fcnet_hiddens": [10],
                 },
