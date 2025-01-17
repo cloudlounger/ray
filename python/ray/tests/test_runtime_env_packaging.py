@@ -58,6 +58,7 @@ HTTPS_PACKAGE_URI = "https://github.com/shrekris-anyscale/test_module/archive/HE
 S3_PACKAGE_URI = "s3://runtime-env-test/test_runtime_env.zip"
 S3_WHL_PACKAGE_URI = "s3://runtime-env-test/test_module-0.0.1-py3-none-any.whl"
 GS_PACKAGE_URI = "gs://public-runtime-env-test/test_module.zip"
+HTTP_PACKAGE_URI = "http://github.com/shrekris-anyscale/test_module/archive/HEAD.zip"
 
 
 def random_string(size: int = 10):
@@ -615,6 +616,12 @@ class TestDownloadAndUnpackPackage:
                 pkg_uri=HTTPS_PACKAGE_URI, base_directory=temp_dest_dir
             )
             assert (Path(local_dir) / "test_module").exists()
+    
+    async def test_download_and_unpack_package_with_http_uri(self):
+        with tempfile.TemporaryDirectory() as temp_dest_dir:
+            local_dir = await download_and_unpack_package(
+                pkg_uri=HTTP_PACKAGE_URI, base_directory=temp_dest_dir
+            )
 
     async def test_download_and_unpack_package_with_s3_uri(self):
         # Note: running this test requires AWS credentials to be set up

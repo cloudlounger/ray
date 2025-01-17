@@ -91,12 +91,13 @@ class Protocol(Enum):
     S3 = "s3", "Remote s3 path, assumes everything packed in one zip file."
     GS = "gs", "Remote google storage path, assumes everything packed in one zip file."
     FILE = "file", "File storage path, assumes everything packed in one zip file."
+    HTTP = "http", "Remote http path, assumes everything packed in one zip file."
 
     @classmethod
     def remote_protocols(cls):
         # Returns a list of protocols that support remote storage
         # These protocols should only be used with paths that end in ".zip" or ".whl"
-        return [cls.HTTPS, cls.S3, cls.GS, cls.FILE]
+        return [cls.HTTPS, cls.S3, cls.GS, cls.FILE, cls.HTTP]
 
 
 def _xor_bytes(left: bytes, right: bytes) -> bytes:
